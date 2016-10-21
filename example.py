@@ -1,11 +1,12 @@
+from __future__ import division
 import logging
 import itertools
 import numpy as np
 
 logger = logging.getLogger(__name__)
 
-b = 27
-r = 20
+b = 7
+r = 12  
 n = b * r
 # n = 24
 t = 0.85
@@ -42,17 +43,16 @@ def mapper(key, value):
     logger.debug(min_hash.shape)
     for band in np.split(min_hash, b):
         logger.debug(band.shape)
-        string_value = "{0} {1}".format(
-            key,
-            shingles.tostring())
-        yield hash(band.tostring()), string_value
+        yield hash(band.tostring()), (key, shingles)
 
 
 def reducer(key, values):
-    logger.info(values)
     sorted_values = sorted(values, key=first_key)
     for value1, value2 in itertools.combinations(sorted_values, 2):
+        logger.info(values)
         k1, ar1 = value1
         k2, ar2 = value2
-        if jaccard_similarity(ar1, ar2) > t:
+        j = jaccard_similarity(ar1, ar2)
+        logger.info(j)
+        if j > t:
             yield k1, k2
