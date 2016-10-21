@@ -52,6 +52,7 @@ The source of a word count program looks as follows:
 
 (c) 2016 Olivier Bachem
 """
+from __future__ import print_function
 from collections import defaultdict
 import argparse
 import glob
@@ -70,7 +71,6 @@ except:
     import json
 import logging
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 
 
 def chunks(iterable, size=10):
@@ -96,22 +96,19 @@ def isolated_batch_call(f, arguments):
     return q.get()
 
 
-def mapreduce(input, mapper, reducer, batch_size=50, log=False):
+def mapreduce(input, mapper, reducer, batch_size=50):
     """Python function that runs a worst-case map reduce framework on the provided data
 
     Args:
       input -- list or generator of (key, value) tuple
       mapper -- function that takes (key, value) pair as input and returns iterable key-value pairs
       reducer -- function that takes key + list of values and outputs (key, value) pair
-      log -- whether log messages should be generated (default: False)
 
     Returns list of (key, value pairs)
     """
     # Set initial random seed
     random.seed(0)
     # Run mappers
-    if log:
-        logging.basicConfig(level=logging.DEBUG)
     logger.info("Starting mapping phase!")
     d = defaultdict(list)
     for pairs_generator in chunks(input, batch_size):
@@ -194,12 +191,12 @@ def evaluate(reported_duplicates, true_duplicates):
     return f1
 
 
-def run(sourcestring, input_pattern, duplicates_file, batch, log):
+def run(sourcestring, input_pattern, duplicates_file, batch):
     mod = import_from_file(sourcestring)
     input = yield_pattern(input_pattern)
 
     reported_duplicates = Set()
-    for output in mapreduce(input, mod.mapper, mod.reducer, batch, log):
+    for output in mapreduce(input, mod.mapper, mod.reducer, batch):
         reported_duplicates.add(output)
 
     true_duplicates = Set()
@@ -224,11 +221,15 @@ def main():
     INPUT_PATTERN = "data/handout_shingles.txt"
     DUPLICATES = "data/handout_duplicates.txt"
     BATCH = 50
+    if args.log:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
     
     with open(args.source_file, "r") as fin:
         source = fin.read()
 
-    print run(source, INPUT_PATTERN, DUPLICATES, BATCH, args.log)
+    print(run(source, INPUT_PATTERN, DUPLICATES, BATCH))
 
 if __name__ == "__main__":
     main()

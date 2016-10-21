@@ -4,8 +4,8 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-b = 42
-r = 23
+b = 27
+r = 20
 n = b * r
 # n = 24
 t = 0.85
@@ -18,6 +18,10 @@ def jaccard_similarity(ar1, ar2):
     i = np.size(np.intersect1d(ar1, ar2))
     u = np.size(np.union1d(ar1, ar2))
     return i / u
+
+
+def first_key(x):
+    return x[0]
 
 
 def mapper(key, value):
@@ -38,11 +42,15 @@ def mapper(key, value):
     logger.debug(min_hash.shape)
     for band in np.split(min_hash, b):
         logger.debug(band.shape)
-        yield hash(band.tostring()), (key, shingles)
+        string_value = "{0} {1}".format(
+            key,
+            shingles.tostring())
+        yield hash(band.tostring()), string_value
 
 
 def reducer(key, values):
-    sorted_values = sorted(values, key=lambda x: x[0])
+    logger.info(values)
+    sorted_values = sorted(values, key=first_key)
     for value1, value2 in itertools.combinations(sorted_values, 2):
         k1, ar1 = value1
         k2, ar2 = value2
